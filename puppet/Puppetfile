@@ -1,0 +1,3 @@
+mod "r_dnsmasq",
+    :git  => "https://github.com/h0tbird/puppet.git",
+    :path => "roles/r_dnsmasq"
