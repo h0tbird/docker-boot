@@ -14,3 +14,9 @@ ADD puppet /etc/puppet
 RUN cd /etc/puppet && \
     librarian-puppet install && \
     puppet apply manifests/site.pp
+
+#------------------------------------------------------------------------------
+# Start supervisord by default:
+#------------------------------------------------------------------------------
+
+CMD ["/usr/bin/supervisord"]
