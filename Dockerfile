@@ -1,5 +1,6 @@
 #------------------------------------------------------------------------------
-# docker build --rm -t registry.demo.lan:5000/dnsmasq .
+# BUILD: docker build --rm -t registry.demo.lan:5000/dnsmasq .
+# RUN:   docker run --rm -i -t registry.demo.lan:5000/dnsmasq
 #------------------------------------------------------------------------------
 
 FROM registry.demo.lan:5000/base
