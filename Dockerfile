@@ -1,9 +1,9 @@
 #------------------------------------------------------------------------------
-# BUILD: docker build --rm -t registry.demo.lan:5000/dnsmasq .
-# RUN:   docker run --rm -i -t registry.demo.lan:5000/dnsmasq
+# BUILD: docker build --rm -t dnsmasq .
+# RUN:   docker run --rm -i -t dnsmasq
 #------------------------------------------------------------------------------
 
-FROM registry.demo.lan:5000/base
+FROM h0tbird/centos-base
 MAINTAINER Marc Villacorta Morera <marc.villacorta@gmail.com>
 
 #------------------------------------------------------------------------------
@@ -12,12 +12,15 @@ MAINTAINER Marc Villacorta Morera <marc.villacorta@gmail.com>
 
 ADD puppet /etc/puppet
 
-RUN cd /etc/puppet && \
-    librarian-puppet install && \
-    puppet apply manifests/site.pp
+RUN cd /etc/puppet/environments/production && \
+    r10k puppetfile install && \
+    FACTER_docker_build=true \
+    puppet apply /etc/puppet/environments/production/manifests/site.pp
 
 #------------------------------------------------------------------------------
-# Start supervisord by default:
+# Require the /sys/fs/cgroup volume mounted and execute the init command:
 #------------------------------------------------------------------------------
 
-CMD ["/usr/bin/supervisord"]
+EXPOSE 22
+VOLUME ["/sys/fs/cgroup"]
+CMD ["/usr/sbin/init"]
