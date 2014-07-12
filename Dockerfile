@@ -1,9 +1,9 @@
 #------------------------------------------------------------------------------
-# BUILD: docker build --rm -t dnsmasq .
-# RUN:   docker run --rm -i -t dnsmasq
+# BUILD: docker build --rm -t h0tbird/dnsmasq .
+# RUN:   docker run --rm -i -t h0tbird/dnsmasq
 #------------------------------------------------------------------------------
 
-FROM h0tbird/centos-base
+FROM h0tbird/base
 MAINTAINER Marc Villacorta Morera <marc.villacorta@gmail.com>
 
 #------------------------------------------------------------------------------
