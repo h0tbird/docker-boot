@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
 # BUILD: docker build --rm -t h0tbird/dnsmasq .
-# RUN:   docker run --rm -i -t h0tbird/dnsmasq
+# RUN:   docker run --privileged -d -P -v /sys/fs/cgroup:/sys/fs/cgroup:ro h0tbird/dnsmasq
 #------------------------------------------------------------------------------
 
 FROM h0tbird/base
