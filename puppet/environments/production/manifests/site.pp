@@ -12,10 +12,19 @@ stage { 'post': require => Stage['main'] }
 Package { allow_virtual => true }
 
 #------------------------------------------------------------------------------
-# Docker builds don't ensure any service:
+# Docker builds don't mess with services:
 #------------------------------------------------------------------------------
 
-if $::docker_build { Service <||> { ensure => undef } }
+if $::docker_build {
+  Service <||> {
+    hasrestart => true,
+    hasstatus  => true,
+    restart    => '/bin/true',
+    stop       => '/bin/true',
+    start      => '/bin/true',
+    status     => '/bin/true',
+  }
+}
 
 #------------------------------------------------------------------------------
 # Include:
