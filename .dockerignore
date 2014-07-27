@@ -1,4 +1,5 @@
 bin
+devel
 .git
 .gitignore
 .dockerignore
