@@ -1,0 +1,6 @@
+bin
+.git
+.gitignore
+.dockerignore
+README.md
+*.swp
