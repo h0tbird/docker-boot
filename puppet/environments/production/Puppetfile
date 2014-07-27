@@ -1,5 +1,5 @@
 mod 'r_dnsmasq',
-  :git => 'https://github.com/h0tbird/puppet-r_dnsmasq.git'
+  :git => 'https://h0tbird@github.com/h0tbird/puppet-r_dnsmasq.git'
 
 mod 'dnsmasq',
-  :git => 'https://github.com/h0tbird/puppet-dnsmasq.git'
+  :git => 'https://h0tbird@github.com/h0tbird/puppet-dnsmasq.git'
