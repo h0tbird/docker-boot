@@ -1,13 +1,12 @@
 #------------------------------------------------------------------------------
-# BUILD: docker build --rm -t h0tbird/dnsmasq .
-# RUN:   docker run --privileged -d -P -v /sys/fs/cgroup:/sys/fs/cgroup:ro h0tbird/dnsmasq
+# Set the base image for subsequent instructions:
 #------------------------------------------------------------------------------
 
 FROM h0tbird/base
 MAINTAINER Marc Villacorta Morera <marc.villacorta@gmail.com>
 
 #------------------------------------------------------------------------------
-# Get the isolated puppet modules and apply the manifest:
+# Get the puppet modules and apply the manifest:
 #------------------------------------------------------------------------------
 
 ADD puppet /etc/puppet
