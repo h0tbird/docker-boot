@@ -1,5 +1,8 @@
 mod 'r_dnsmasq',
   :git => 'https://h0tbird@github.com/h0tbird/puppet-r_dnsmasq.git'
 
+mod 'pxelinux',
+  :git => 'https://h0tbird@github.com/h0tbird/puppet-pxelinux.git'
+
 mod 'dnsmasq',
   :git => 'https://h0tbird@github.com/h0tbird/puppet-dnsmasq.git'
