@@ -17,9 +17,8 @@ RUN cd /etc/puppet/environments/production && \
     puppet apply /etc/puppet/environments/production/manifests/site.pp
 
 #------------------------------------------------------------------------------
-# Require the /sys/fs/cgroup volume mounted and execute the init command:
+# Expose ports and set systemd as default process:
 #------------------------------------------------------------------------------
 
 EXPOSE 22/tcp 53/tcp 67/udp
-VOLUME ["/sys/fs/cgroup"]
 CMD ["/usr/sbin/init"]
