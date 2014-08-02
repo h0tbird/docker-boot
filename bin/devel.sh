@@ -20,4 +20,4 @@ done &> /dev/null
 # Soft link to hieradata:
 #-------------------------
 
-ln -s ../puppet/hieradata devel
+[[ -L devel/hieradata ]] || ln -s ../puppet/hieradata devel
