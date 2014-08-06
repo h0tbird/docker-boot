@@ -4,6 +4,9 @@
 # r_dnsmasq:
 #------------------------------------------------------------------------------
 
+r_dnsmasq::pxelinux:
+ version: 'latest'
+
 r_dnsmasq::dnsmasq:
  ensure: 'running'
  enable: true
@@ -13,5 +16,7 @@ r_dnsmasq::dnsmasq:
  dhcp_range: ['192.168.2.50,192.168.2.150,12h']
  log_queries: true
  log_dhcp: true
+ enable_tftp: true
+ tftp_root: '/tftproot'
 
 ...
