@@ -17,6 +17,6 @@ r_dnsmasq::dnsmasq:
  log_queries: true
  log_dhcp: true
  enable_tftp: true
- tftp_root: '/tftproot'
+ tftp_root: '/tftpboot'
 
 ...
