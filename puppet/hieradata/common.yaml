@@ -18,5 +18,6 @@ r_dnsmasq::dnsmasq:
  log_dhcp: true
  enable_tftp: true
  tftp_root: '/tftpboot'
+ dhcp_boot: 'pxelinux.0'
 
 ...
