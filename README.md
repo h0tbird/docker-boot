@@ -1,4 +1,4 @@
-docker-dnsmasq
-==============
+docker-boot
+===========
 
-Containerized dnsmasq server
+Containerized boot server
