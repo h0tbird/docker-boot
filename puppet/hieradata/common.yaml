@@ -1,13 +1,13 @@
 ---
 
 #------------------------------------------------------------------------------
-# r_dnsmasq:
+# r_boot:
 #------------------------------------------------------------------------------
 
-r_dnsmasq::pxelinux:
+r_boot::pxelinux:
  version: 'latest'
 
-r_dnsmasq::dnsmasq:
+r_boot::dnsmasq:
  ensure: 'running'
  enable: true
  version: 'latest'
