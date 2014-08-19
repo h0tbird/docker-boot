@@ -30,4 +30,4 @@ if $::docker_build {
 # Include:
 #------------------------------------------------------------------------------
 
-include ::r_dnsmasq
+include ::r_boot
