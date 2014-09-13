@@ -19,5 +19,9 @@ r_boot::dnsmasq:
  enable_tftp: true
  tftp_root: '/tftpboot'
  dhcp_boot: 'pxelinux.0'
+ domain_needed: true
+ local: '/demo.lan/'
+ expand_hosts: true
+ domain: 'demo.lan'
 
 ...
