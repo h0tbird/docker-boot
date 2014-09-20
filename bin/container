@@ -1,0 +1,49 @@
+#!/bin/bash
+
+#------------------------------------------------------------------------------
+# Define ROLE and DOMAIN:
+#------------------------------------------------------------------------------
+
+ROLE='boot'
+DOMAIN='demo.lan'
+
+#------------------------------------------------------------------------------
+# Sanity checks:
+#------------------------------------------------------------------------------
+
+function usage {
+  echo "Usage: $0 [start | stop name]" && exit 1
+}
+
+[ $# -lt 1 ] && usage
+[ $1 == 'start' ] && [ $# -ne 1 ] && usage
+[ $1 == 'stop' ] && [ $# -ne 2 ] && usage
+! systemctl -q is-active docker && echo 'Docker is not running' && exit 1
+
+#------------------------------------------------------------------------------
+# Whether to start or stop the container:
+#------------------------------------------------------------------------------
+
+case $1 in
+
+  start)
+    LIST=`docker ps -a | awk '/'$ROLE'[0-9]/ {print $NF}'`
+    for ID in `seq -w 99`; do echo $LIST | grep -q $ID || break; done
+    echo "··· Starting '${ROLE}${ID}' container"
+    CID=$(docker run --privileged -h ${ROLE}${ID}.${DOMAIN} --name ${ROLE}${ID} -d -P h0tbird/${ROLE})
+    echo "··· Starting '${ROLE}${ID}' dhcpcd instance"
+    sudo pipework br0 ${ROLE}${ID} 192.168.2.1/24
+    echo '··· Setup /etc/resolv.conf'
+    echo 'nameserver 192.168.2.1' | sudo resolvconf -m 0 -a ${ROLE}${ID}
+    ;;
+
+  stop)
+    echo '··· Restore /etc/resolv.conf'
+    sudo resolvconf -d $2
+    echo "··· Killing '${2}' container"
+    docker ps | grep -wq $2 && ID=$(docker kill $2)
+    echo "··· Removing '${2}' container"
+    docker ps -a | grep -wq $2 && ID=`docker rm -f $2`
+    ;;
+
+esac
