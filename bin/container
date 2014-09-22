@@ -42,7 +42,7 @@ case $1 in
     sudo resolvconf -d $2
     echo "··· Killing '${2}' container"
     docker ps | grep -wq $2 && ID=$(docker kill $2)
-    echo "··· Removing '${2}' container"
+    echo "··· Removing '${2}' container"; sleep 1
     docker ps -a | grep -wq $2 && ID=`docker rm -f $2`
     ;;
 
