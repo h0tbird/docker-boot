@@ -24,4 +24,8 @@ r_boot::dnsmasq:
  expand_hosts: true
  domain: 'demo.lan'
 
+r_boot::nfs:
+ ensure: 'running'
+ enable: true
+
 ...

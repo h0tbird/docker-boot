@@ -6,3 +6,6 @@ mod 'pxelinux',
 
 mod 'dnsmasq',
   :git => 'https://h0tbird@github.com/h0tbird/puppet-dnsmasq.git'
+
+mod 'nfs',
+  :git => 'https://h0tbird@github.com/h0tbird/puppet-nfs.git'
