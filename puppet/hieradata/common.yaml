@@ -27,5 +27,6 @@ r_boot::dnsmasq:
 r_boot::nfs:
  ensure: 'running'
  enable: true
+ version: 'latest'
 
 ...
