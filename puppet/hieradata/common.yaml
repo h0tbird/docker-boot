@@ -13,7 +13,8 @@ r_boot::dnsmasq:
  version: 'latest'
  effective_uid: 'root'
  effective_gid: 'root'
- dhcp_range: ['192.168.2.50,192.168.2.150,12h']
+ dhcp_ranges:
+   - '192.168.2.50,192.168.2.150,12h'
  log_queries: true
  log_dhcp: true
  enable_tftp: true
@@ -23,6 +24,9 @@ r_boot::dnsmasq:
  local: '/demo.lan/'
  expand_hosts: true
  domain: 'demo.lan'
+ dhcp_hosts:
+   - '4c:72:b9:26:25:97,kvm01,infinite'
+   - '00:30:1b:a0:6f:cc,kvm02,infinite'
 
 r_boot::nfs:
  ensure: 'running'
