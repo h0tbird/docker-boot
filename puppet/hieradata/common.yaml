@@ -32,5 +32,7 @@ r_boot::nfs:
  ensure: 'running'
  enable: true
  version: 'latest'
+ exports:
+   - '/kickstart *(ro)'
 
 ...
