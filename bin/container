@@ -31,7 +31,7 @@ case $1 in
     for ID in `seq -w 99`; do echo $LIST | grep -q $ID || break; done
     echo "··· Starting '${ROLE}${ID}' container"
     CID=$(docker run -t --privileged -h ${ROLE}${ID}.${DOMAIN} --name ${ROLE}${ID} -d -P h0tbird/${ROLE})
-    echo "··· Starting '${ROLE}${ID}' dhcpcd instance"
+    echo "··· Starting '${ROLE}${ID}' network"
     sudo pipework br0 ${ROLE}${ID} 192.168.2.1/24
     echo '··· Setup /etc/resolv.conf'
     echo 'nameserver 192.168.2.1' | sudo resolvconf -m 0 -a ${ROLE}${ID}
