@@ -29,6 +29,7 @@ r_boot::dnsmasq:
    - '00:30:1b:a0:6f:cc,kvm02,infinite'
  dhcp_options:
    - 'option:router,192.168.1.1'
+ addn_hosts: '/etc/hosts.conf'
 
 r_boot::nfs:
  ensure: 'running'
