@@ -32,7 +32,7 @@ case $1 in
     LIST=`docker ps -a | awk '/'$ROLE'[0-9]/ {print $NF}'`
     for ID in `seq -w 99`; do echo $LIST | grep -q $ID || break; done
     echo "··· Starting '${ROLE}${ID}' container"
-    CID=$(docker run -t --privileged -h ${ROLE}${ID}.${DOMAIN} --name ${ROLE}${ID} -d --net=none h0tbird/${ROLE})
+    CID=$(docker run -t --privileged -v /data/kickstart:/kickstart -h ${ROLE}${ID}.${DOMAIN} --name ${ROLE}${ID} -d --net=none h0tbird/${ROLE})
     echo "··· Setup container '${ROLE}${ID}' network (pipework)"
     sudo pipework br0 ${ROLE}${ID} ${IP}/24@${GW}
     echo "··· Setup host's/etc/resolv.conf (resolvconf)"
