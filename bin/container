@@ -32,12 +32,15 @@ case $1 in
     LIST=`docker ps -a | awk '/'$ROLE'[0-9]/ {print $NF}'`
     for ID in `seq -w 99`; do echo $LIST | grep -q $ID || break; done
     echo "··· Starting '${ROLE}${ID}' container"
-    CID=$(docker run -t --privileged -v /data/kickstart:/kickstart \
-    -v /data/dnsmasq:/var/lib/dnsmasq -v /data/pxelinux:/tftpboot/pxelinux.cfg \
+    CID=$(docker run -t --privileged \
+    -v /data/${ROLE}/kickstart:/kickstart \
+    -v /data/${ROLE}/dnsmasq:/var/lib/dnsmasq \
+    -v /data/${ROLE}/pxelinux:/tftpboot/pxelinux.cfg \
+    -v /data/${ROLE}/images:/tftpboot/images \
     -h ${ROLE}${ID}.${DOMAIN} --name ${ROLE}${ID} -d --net=none h0tbird/${ROLE})
     echo "··· Setup container '${ROLE}${ID}' network (pipework)"
     sudo pipework br0 ${ROLE}${ID} ${IP}/24@${GW}
-    echo "··· Setup host's/etc/resolv.conf (resolvconf)"
+    echo "··· Setup host's /etc/resolv.conf (resolvconf)"
     echo "nameserver ${IP}" | sudo resolvconf -m 0 -a ${ROLE}${ID}
     ;;
 
