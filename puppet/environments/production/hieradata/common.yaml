@@ -17,10 +17,6 @@ r_boot::dnsmasq:
  local: '/demo.lan/'
  expand_hosts: true
  domain: 'demo.lan'
- dhcp_hosts:
-   - '4c:72:b9:26:25:97,kvm01,infinite'
-   - '54:be:f7:88:25:c5,kvm02,infinite'
-   - '00:30:1b:a0:6f:cc,kvm03,infinite'
  dhcp_options:
    - 'option:router,192.168.1.1'
  addn_hosts: '/etc/hosts.conf'
