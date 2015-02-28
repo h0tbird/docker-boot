@@ -1,5 +1,6 @@
 # docker-boot
 
+Clone and build:
 ```
 git clone https://github.com/h0tbird/docker-boot.git
 cd docker-boot
