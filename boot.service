@@ -20,15 +20,15 @@ ExecStartPre=-/usr/sbin/docker pull h0tbird/boot:latest
 # Start the container:
 #----------------------
 
-ExecStart=/usr/bin/sh -c " \
-  docker run \
-  --tty --privileged \
-  --volume /data/boot/dnsmasq:/var/lib/dnsmasq \
-  --volume /data/boot/pxelinux:/tftpboot/pxelinux.cfg \
-  --volume /data/boot/images:/tftpboot/images \
-  --hostname=boot01.demo.lan \
-  --name=boot01 \
-  --net=none \
+ExecStart=/usr/bin/sh -c "docker run -t \
+  --privileged \
+  --volume   /data/boot/dnsmasq:/var/lib/dnsmasq \
+  --volume   /data/boot/pxelinux:/tftpboot/pxelinux.cfg \
+  --volume   /data/boot/images:/tftpboot/images \
+  --hostname boot01.demo.lan \
+  --name     boot01 \
+  --net      none \
+  --env      WAIT_IFACE=eth1 \
   h0tbird/boot:latest \
   --dhcp-hostsfile=/var/lib/dnsmasq/dhcp_hosts \
   --dhcp-range=192.168.1.50,192.168.1.150,12h \
