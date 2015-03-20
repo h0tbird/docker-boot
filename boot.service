@@ -8,66 +8,17 @@ Restart=on-failure
 RestartSec=20
 TimeoutStartSec=0
 
-#---------------------------------
 # Preparations for the container:
-#---------------------------------
+ExecStartPre=-/usr/local/sbin/runctl-boot pre
 
-ExecStartPre=-/usr/sbin/docker kill boot01
-ExecStartPre=-/usr/sbin/docker rm boot01
-ExecStartPre=-/usr/sbin/docker pull h0tbird/boot:latest
-
-#----------------------
 # Start the container:
-#----------------------
+ExecStart=/usr/local/sbin/runctl-boot start
 
-ExecStart=/usr/bin/sh -c "docker run -t \
-  --privileged \
-  --volume   /data/boot/dnsmasq:/var/lib/dnsmasq \
-  --volume   /data/boot/pxelinux:/tftpboot/pxelinux.cfg \
-  --volume   /data/boot/images:/tftpboot/images \
-  --hostname boot01.demo.lan \
-  --name     boot01 \
-  --net      none \
-  --env      WAIT_IFACE=eth1 \
-  h0tbird/boot:latest \
-  --dhcp-hostsfile=/var/lib/dnsmasq/dhcp_hosts \
-  --dhcp-range=192.168.1.50,192.168.1.150,12h \
-  --dhcp-option=option:router,192.168.1.1 \
-  --local=/demo.lan/ \
-  --domain=demo.lan \
-  --log-queries \
-  --log-dhcp \
-  --log-facility=-"
-
-#--------------------------------
 # Setup the container's network:
-#--------------------------------
+ExecStartPost=/usr/local/sbin/runctl-boot post
 
-ExecStartPost=/usr/sbin/sleep 2
-ExecStartPost=/usr/bin/sh -c " \
-  PID=$(docker inspect --format='{{ .State.Pid }}' boot01); \
-  [ ! -d /var/run/netns ] && mkdir -p /var/run/netns; \
-  ln -fs /proc/$PID/ns/net /var/run/netns/$PID; \
-  ip link add boot01-int type veth peer name veth-boot01; \
-  ip link set veth-boot01 master br0; \
-  ip link set veth-boot01 up; \
-  ip link set netns $PID dev boot01-int; \
-  ip netns exec $PID ip link set boot01-int name eth1; \
-  ip netns exec $PID ip addr add 192.168.1.2/24 dev eth1; \
-  ip netns exec $PID ip route delete default &> /dev/null; \
-  ip netns exec $PID ip link set eth1 up; \
-  ip netns exec $PID ip route replace default via 192.168.1.1"
-
-ExecStartPost=/usr/bin/sh -c " \
-  echo 'nameserver 192.168.1.2' | resolvconf -m 0 -a boot01"
-
-#---------------------
 # Stop the container:
-#---------------------
-
-ExecStop=/usr/bin/sh -c " \
-  docker stop boot01; \
-  ip link del veth-boot01"
+ExecStop=/usr/local/sbin/runctl-boot stop
 
 [Install]
 WantedBy=multi-user.target

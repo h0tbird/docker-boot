@@ -1,0 +1,105 @@
+#!/bin/bash
+
+#------------------------------------------------------------------------------
+# Global constants:
+#------------------------------------------------------------------------------
+
+readonly DOCKER=`which docker`
+readonly IPCMD=`which ip`
+readonly BRCTL=`which brctl`
+
+#------------------------------------------------------------------------------
+# Configuration options:
+#------------------------------------------------------------------------------
+
+readonly ID='boot01'
+readonly IMAGE='h0tbird/boot:latest'
+readonly HOSTNAME='boot01.demo.lan'
+readonly DHCP_RANGE='192.168.1.50,192.168.1.150,12h'
+readonly DHCP_OPTION='option:router,192.168.1.1'
+readonly DOMAIN='demo.lan'
+readonly IP='192.168.1.2'
+readonly PREFIX='24'
+readonly GATEWAY='192.168.1.1'
+
+#------------------------------------------------------------------------------
+# To be called by ExecStartPre:
+#------------------------------------------------------------------------------
+
+function run_pre {
+  $DOCKER kill $ID || exit 1
+  $DOCKER rm $ID || exit 2
+  $DOCKER pull $IMAGE && return 0
+}
+
+#------------------------------------------------------------------------------
+# To be called by ExecStart:
+#------------------------------------------------------------------------------
+
+function run_start {
+  exec $DOCKER run -t \
+  --privileged \
+  --volume   /data/boot/dnsmasq:/var/lib/dnsmasq \
+  --volume   /data/boot/pxelinux:/tftpboot/pxelinux.cfg \
+  --volume   /data/boot/images:/tftpboot/images \
+  --hostname $HOSTNAME \
+  --name     $ID \
+  --net      none \
+  --env      WAIT_IFACE=eth1 \
+  $IMAGE \
+  --dhcp-hostsfile=/var/lib/dnsmasq/dhcp_hosts \
+  --dhcp-range=$DHCP_RANGE \
+  --dhcp-option=$DHCP_OPTION \
+  --local=/$DOMAIN/ \
+  --domain=$DOMAIN \
+  --log-queries \
+  --log-dhcp \
+  --log-facility=-
+}
+
+#------------------------------------------------------------------------------
+# To be called by ExecStartPost:
+#------------------------------------------------------------------------------
+
+function run_post {
+
+  sleep 2
+
+  PID=$($DOCKER inspect --format='{{ .State.Pid }}' $ID)
+  [ ! -d /var/run/netns ] && mkdir -p /var/run/netns
+  ln -fs /proc/$PID/ns/net /var/run/netns/$PID
+
+  $IPCMD link add ${ID}-int type veth peer name veth-${ID}
+  $IPCMD link set veth-${ID} master br0
+  $IPCMD link set veth-${ID} up
+  $IPCMD link set netns $PID dev ${ID}-int
+
+  $IPCMD netns exec $PID ip link set ${ID}-int name eth1
+  $IPCMD netns exec $PID ip addr add ${IP}/${PREFIX} dev eth1
+  $IPCMD netns exec $PID ip route delete default &> /dev/null
+  $IPCMD netns exec $PID ip link set eth1 up
+  $IPCMD netns exec $PID ip route replace default via $GATEWAY
+
+  echo "nameserver $IP" | resolvconf -m 0 -a $ID
+}
+
+#------------------------------------------------------------------------------
+# To be called by ExecStop:
+#------------------------------------------------------------------------------
+
+function run_stop {
+
+  $DOCKER stop $ID || exit 1
+
+  $BRCTL show | grep -q veth-${ID} && {
+    $IPCMD link del veth-${ID} || exit 2
+  }
+
+  return 0
+}
+
+#------------------------------------------------------------------------------
+# Entry point:
+#------------------------------------------------------------------------------
+
+case $1 in pre|start|post|stop) run_$1 ;; esac
