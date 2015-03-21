@@ -9,11 +9,7 @@ cd docker-boot
 
 Install and run:
 ```
-sudo ln boot.service /etc/systemd/system/boot.service
-sudo ln bin/runctl /usr/local/sbin/runctl-boot
-sudo mkdir /etc/bootpaas
-sudo cp boot.conf /etc/bootpaas
-sudo systemctl daemon-reload
+sudo ./bin/install
 sudo systemctl start boot
 ```
 

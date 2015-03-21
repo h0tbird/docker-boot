@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Hard-link the systemd unit:
+ln -f boot.service /etc/systemd/system/boot.service
+ln -f bin/runctl /usr/local/sbin/runctl-boot
+
+# Populate config if not present:
+[ -d /etc/bootpaas ] || mkdir /etc/bootpaas
+[ ! -f /etc/bootpaas/boot.conf ] && cp boot.conf /etc/bootpaas/
+
+# Reload systemd:
+systemctl daemon-reload
