@@ -2,5 +2,7 @@ bin
 .git
 .gitignore
 .dockerignore
+boot.service
+boot.conf
 README.md
 *.swp
