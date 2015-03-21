@@ -55,24 +55,34 @@ function run_start {
 
 function run_post {
 
-  sleep 2
+  # Wait for the container:
+  RETRIES=10; while [ $RETRIES -gt 0 ]; do
+    PID=$($DOCKER inspect --format='{{ .State.Pid }}' $ID | \
+    grep -oE "^[0-9]+") || PID=0
+    [ $PID -gt 0 ] && break
+    sleep 1; RETRIES=$((RETRIES - 1))
+  done
 
-  PID=$($DOCKER inspect --format='{{ .State.Pid }}' $ID)
+  # Setup the environment:
+  [ $RETRIES -eq 0 ] && exit 1
   [ ! -d /var/run/netns ] && mkdir -p /var/run/netns
-  ln -fs /proc/$PID/ns/net /var/run/netns/$PID
+  ln -fs /proc/$PID/ns/net /var/run/netns/$PID || exit 2
 
-  $IPCMD link add ${ID}-int type veth peer name veth-${ID}
-  $IPCMD link set veth-${ID} master br0
-  $IPCMD link set veth-${ID} up
-  $IPCMD link set netns $PID dev ${ID}-int
+  # Host-side network:
+  $IPCMD link add ${ID}-int type veth peer name veth-${ID} || exit 3
+  $IPCMD link set veth-${ID} master br0 || exit 4
+  $IPCMD link set veth-${ID} up || exit 5
+  $IPCMD link set netns $PID dev ${ID}-int || exit 6
 
-  $IPCMD netns exec $PID ip link set ${ID}-int name eth1
-  $IPCMD netns exec $PID ip addr add ${IP}/${PREFIX} dev eth1
+  # Container-side network:
+  $IPCMD netns exec $PID ip link set ${ID}-int name eth1 || exit 7
+  $IPCMD netns exec $PID ip addr add ${IP}/${PREFIX} dev eth1 || exit 8
   $IPCMD netns exec $PID ip route delete default &> /dev/null
-  $IPCMD netns exec $PID ip link set eth1 up
-  $IPCMD netns exec $PID ip route replace default via $GATEWAY
+  $IPCMD netns exec $PID ip link set eth1 up || exit 9
+  $IPCMD netns exec $PID ip route replace default via $GATEWAY || exit 10
 
-  echo "nameserver $IP" | resolvconf -m 0 -a $ID
+  # Setup host DNS:
+  echo "nameserver $IP" | resolvconf -m 0 -a $ID || exit 11
 }
 
 #------------------------------------------------------------------------------
