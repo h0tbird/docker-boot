@@ -9,18 +9,10 @@ readonly IPCMD=`which ip`
 readonly BRCTL=`which brctl`
 
 #------------------------------------------------------------------------------
-# Configuration options:
+# Source the configuration:
 #------------------------------------------------------------------------------
 
-readonly ID='boot01'
-readonly IMAGE='h0tbird/boot:latest'
-readonly HOSTNAME='boot01.demo.lan'
-readonly DHCP_RANGE='192.168.1.50,192.168.1.150,12h'
-readonly DHCP_OPTION='option:router,192.168.1.1'
-readonly DOMAIN='demo.lan'
-readonly IP='192.168.1.2'
-readonly PREFIX='24'
-readonly GATEWAY='192.168.1.1'
+[ -f /etc/bootpaas/boot.conf ] && . /etc/bootpaas/boot.conf || exit 99
 
 #------------------------------------------------------------------------------
 # To be called by ExecStartPre:
