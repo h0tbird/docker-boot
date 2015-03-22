@@ -11,7 +11,7 @@
   echo "[Init] Waiting for ${WAIT_IFACE} network..."
 
   while [ $RETRIES -gt 0 ]; do
-    ip -o a | grep -q $WAIT_IFACE && break
+    ip a l dev $WAIT_IFACE | grep -q inet && break
     sleep 1; RETRIES=$((RETRIES - 1))
   done
 
