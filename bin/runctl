@@ -12,7 +12,7 @@ readonly BRCTL=`which brctl`
 # Source the configuration:
 #------------------------------------------------------------------------------
 
-[ -f /etc/bootpaas/boot.conf ] && . /etc/bootpaas/boot.conf || exit 99
+[ -f /etc/booddies/boot.conf ] && . /etc/booddies/boot.conf || exit 99
 
 #------------------------------------------------------------------------------
 # To be called by ExecStartPre:
