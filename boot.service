@@ -1,6 +1,6 @@
 [Unit]
 Description=Boot container
-After=docker.service network-lan-static.service
+After=docker.service
 Requires=docker.service network-lan-static.service
 
 [Service]

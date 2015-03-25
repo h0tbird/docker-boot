@@ -6,7 +6,6 @@
 
 readonly DOCKER=`which docker`
 readonly IPCMD=`which ip`
-readonly BRCTL=`which brctl`
 
 #------------------------------------------------------------------------------
 # Source the configuration:
@@ -21,6 +20,7 @@ readonly BRCTL=`which brctl`
 function run_pre {
   $DOCKER kill $ID || exit 1
   $DOCKER rm $ID || exit 2
+  $IPCMD link del veth-${ID} &> /dev/null
   $DOCKER pull $IMAGE && return 0
 }
 
@@ -90,13 +90,8 @@ function run_post {
 #------------------------------------------------------------------------------
 
 function run_stop {
-
   $DOCKER stop $ID || exit 1
-
-  $BRCTL show | grep -q veth-${ID} && {
-    $IPCMD link del veth-${ID} || exit 2
-  }
-
+  $IPCMD link del veth-${ID} &> /dev/null || exit 2
   return 0
 }
 
