@@ -14,26 +14,92 @@ readonly IPCMD=`which ip`
 [ -f /etc/booddies/boot.conf ] && . /etc/booddies/boot.conf || exit 99
 
 #------------------------------------------------------------------------------
-# To be called by ExecStartPre:
+# Function to be called by ExecStartPre:
 #------------------------------------------------------------------------------
 
 function run_pre {
-  $DOCKER kill $ID || exit 1
-  $DOCKER rm $ID || exit 2
-  $IPCMD link del veth-${ID} &> /dev/null
-  $DOCKER pull $IMAGE && return 0
+
+  #---------------------------------------------
+  # Create the data directories if not present:
+  #---------------------------------------------
+
+  [ -d $DATA_DIR/dnsmasq ] || mkdir -p $DATA_DIR/dnsmasq
+  [ -d $DATA_DIR/pxelinux ] || mkdir -p $DATA_DIR/pxelinux
+  [ -d $DATA_DIR/images ] || mkdir -p $DATA_DIR/images
+
+  #--------------------------------------
+  # Kill the container if it is running:
+  #--------------------------------------
+
+  local MSG1="[Pre] Checking whether '$ID' container is running..."
+  local MSG2="[Pre] The container '$ID' is running, killing it..."
+  local MSG3="[Pre] OK! The container '$ID' has been killed"
+  local MSG4="[Pre] Ops! Failed to kill the container '$ID'"
+  local MSG5="[Pre] OK! The container '$ID' is not running"
+
+  echo $MSG1; $DOCKER ps | grep -q $ID && {
+  echo $MSG2; $DOCKER kill $ID &> /dev/null && echo $MSG3 || {
+  echo $MSG4; exit 2
+  } } || echo $MSG5
+
+  #-----------------------------------------
+  # Delete the container if it does exists:
+  #-----------------------------------------
+
+  local MSG1="[Pre] Checking whether '$ID' container exists..."
+  local MSG2="[Pre] The container '$ID' exists, deleting it..."
+  local MSG3="[Pre] OK! The container '$ID' has been deleted"
+  local MSG4="[Pre] Ops! Failed to delete the container '$ID'"
+  local MSG5="[Pre] OK! The container '$ID' does not exists"
+
+  echo $MSG1; $DOCKER ps -a | grep -q $ID && {
+  echo $MSG2; $DOCKER rm $ID &> /dev/null && echo $MSG3 || {
+  echo $MSG4; exit 3
+  } } || echo $MSG5
+
+  #----------------------------------------------------
+  # Delete the host-side network interface if present:
+  #----------------------------------------------------
+
+  local MSG1="[Pre] Checking whether 'veth-${ID}' interface exists..."
+  local MSG2="[Pre] The interface 'veth-${ID}' exists, deleting it..."
+  local MSG3="[Pre] OK! The interface 'veth-${ID}' has been deleted"
+  local MSG4="[Pre] Ops! Failed to delete the interface 'veth-${ID}'"
+  local MSG5="[Pre] OK! The interface 'veth-${ID}' does not exists"
+
+  echo $MSG1; ip l show dev veth-${ID} &> /dev/null && {
+  echo $MSG2; $IPCMD link del veth-${ID} &> /dev/null && echo $MSG3 || {
+  echo $MSG4; exit 4
+  } } || echo $MSG5
+
+  #-------------------------------------------------------------
+  # Download the image if not present or is tagged as 'latest':
+  #-------------------------------------------------------------
+
+  local MSG1="[Pre] Checking if '$IMAGE' has to be downloaded..."
+  local MSG2="[Pre] Yes, downloading the image '$IMAGE' now..."
+  local MSG3="[Pre] OK! The image '$IMAGE' is up to date"
+  local MSG4="[Pre] Ops! Failed to download the image '$IMAGE'"
+  local MSG5="[Pre] OK! The image '$IMAGE' already exists"
+
+  (! $DOCKER images | grep -q $IMAGE); COND1=$?
+  $DOCKER images | grep $IMAGE | grep -q latest; COND2=$?
+  echo $MSG1; [[ "$COND1" -eq 0 || "$COND2" -eq 0 ]] && {
+  echo $MSG2; $DOCKER pull $IMAGE &> /dev/null && echo $MSG3 || {
+  echo $MSG4; exit 5
+  } } || echo $MSG5
 }
 
 #------------------------------------------------------------------------------
-# To be called by ExecStart:
+# Function to be called by ExecStart:
 #------------------------------------------------------------------------------
 
 function run_start {
   exec $DOCKER run -t \
   --privileged \
-  --volume   /data/boot/dnsmasq:/var/lib/dnsmasq \
-  --volume   /data/boot/pxelinux:/tftpboot/pxelinux.cfg \
-  --volume   /data/boot/images:/tftpboot/images \
+  --volume   $DATA_DIR/dnsmasq:/var/lib/dnsmasq \
+  --volume   $DATA_DIR/pxelinux:/tftpboot/pxelinux.cfg \
+  --volume   $DATA_DIR/images:/tftpboot/images \
   --hostname $HOSTNAME \
   --name     $ID \
   --net      none \
@@ -50,49 +116,174 @@ function run_start {
 }
 
 #------------------------------------------------------------------------------
-# To be called by ExecStartPost:
+# Function to be called by ExecStartPost:
 #------------------------------------------------------------------------------
 
 function run_post {
 
-  # Wait for the container:
-  RETRIES=10; while [ $RETRIES -gt 0 ]; do
+  #----------------------------------------------
+  # Wait for the container to become accessible:
+  #----------------------------------------------
+
+  local MSG1="[Post] Waiting for the '$ID' container to become accessible..."
+  local MSG2="[Post] OK! The container '$ID' looks accessible now"
+  local MSG3="[Post] Ops! Time out. Where is the '$ID' container?"
+
+  echo $MSG1; RETRIES=10; while [ $RETRIES -gt 0 ]; do
     PID=$($DOCKER inspect --format='{{ .State.Pid }}' \
     $ID 2> /dev/null | grep -oE "^[0-9]+") || PID=0
     [ $PID -gt 0 ] && break
     sleep 1; RETRIES=$((RETRIES - 1))
   done
 
-  # Setup the environment:
-  [ $RETRIES -eq 0 ] && exit 1
+  [ $RETRIES -gt 0 ] && echo $MSG2 || {
+    echo $MSG3; exit 1
+  }
+
+  #----------------------------------------------------
+  # Make the container's network namespace accessible:
+  #----------------------------------------------------
+
+  echo "[Post] Make sure the container's network namespace is accessible..."
   [ ! -d /var/run/netns ] && mkdir -p /var/run/netns
   ln -fs /proc/$PID/ns/net /var/run/netns/$PID || exit 2
+  echo "[Post] OK! It should be accessible now"
 
-  # Host-side network:
-  $IPCMD link add ${ID}-int type veth peer name veth-${ID} || exit 3
-  $IPCMD link set veth-${ID} master br0 || exit 4
-  $IPCMD link set veth-${ID} up || exit 5
-  $IPCMD link set netns $PID dev ${ID}-int || exit 6
+  #----------------------------------------------------
+  # Create a pair of peer veth interfaces on the host:
+  #----------------------------------------------------
 
-  # Container-side network:
-  $IPCMD netns exec $PID ip link set ${ID}-int name eth1 || exit 7
-  $IPCMD netns exec $PID ip addr add ${IP}/${PREFIX} dev eth1 || exit 8
-  $IPCMD netns exec $PID ip route delete default &> /dev/null
-  $IPCMD netns exec $PID ip link set eth1 up || exit 9
-  $IPCMD netns exec $PID ip route replace default via $GATEWAY || exit 10
+  local MSG1="[Post] Adding '${ID}-int' as peer of 'veth-${ID}'..."
+  local MSG2="[Post] OK! Both '${ID}-int' and 'veth-${ID}' have been added"
+  local MSG3="[Post] Ops! Cannot add interfaces '${ID}-int' nor 'veth-${ID}'"
 
-  # Setup host DNS:
-  echo "nameserver $IP" | resolvconf -m 0 -a $ID || exit 11
+  echo $MSG1; $IPCMD link add ${ID}-int type veth peer name veth-${ID} && \
+  echo $MSG2 || (echo $MSG3; exit 3)
+
+  #-------------------------------------------------------
+  # Connect the host peer interface to the host's bridge:
+  #-------------------------------------------------------
+
+  local MSG1="[Post] Connecting 'veth-${ID}' interface to 'br0'"
+  local MSG2="[Post] OK! Interface 'veth-${ID}' is now connected to 'br0'"
+  local MSG3="[Post] Ops! Cannot connect 'veth-${ID}' interface to 'br0'"
+
+  echo $MSG1; $IPCMD link set veth-${ID} master br0 && \
+  echo $MSG2 || (echo $MSG3; exit 4)
+
+  #------------------------------------------
+  # Bring up the host's peer interface link:
+  #------------------------------------------
+
+  local MSG1="[Post] Bringing up 'veth-${ID}' link..."
+  local MSG2="[Post] OK! Link 'veth-${ID}' is up"
+  local MSG3="[Post] Ops! Cannot bring up 'veth-${ID}' link"
+
+  echo $MSG1; $IPCMD link set veth-${ID} up && \
+  echo $MSG2 || (echo $MSG3; exit 5)
+
+  #-----------------------------------------------------------
+  # Inject the container's peer interface into the container:
+  #-----------------------------------------------------------
+
+  local MSG1="[Post] Injecting '${ID}-int' peer into the container..."
+  local MSG2="[Post] OK! Now '${ID}-int' lives inside the container"
+  local MSG3="[Post] Ops! Cannot inject '${ID}-int' into the container"
+
+  echo $MSG1; $IPCMD link set netns $PID dev ${ID}-int && \
+  echo $MSG2 || (echo $MSG3; exit 6)
+
+  #------------------------------------------------
+  # Rename the container's peer interface to eth1:
+  #------------------------------------------------
+
+  local MSG1="[Post] Renaming container's '${ID}-int' to eth1..."
+  local MSG2="[Post] OK! '${ID}-int' has been renamed to eth1"
+  local MSG3="[Post] Ops! Cannot rename '${ID}-int'"
+
+  echo $MSG1; $IPCMD netns exec $PID ip link set ${ID}-int name eth1 && \
+  echo $MSG2 || (echo $MSG3; exit 7)
+
+  #----------------------------------------------------
+  # Add a static IP to the container's eth1 interface:
+  #----------------------------------------------------
+
+  local MSG1="[Post] Adding ${IP}/${PREFIX} to container's eth1..."
+  local MSG2="[Post] OK! The current IP is ${IP}/${PREFIX}"
+  local MSG3="[Post] Ops! Cannot set IP to ${IP}/${PREFIX}"
+
+  echo $MSG1; $IPCMD netns exec $PID ip addr add ${IP}/${PREFIX} dev eth1 && \
+  echo $MSG2 || (echo $MSG3; exit 8)
+
+  #-------------------------------------------
+  # Bring up container's eth1 interface link:
+  #-------------------------------------------
+
+  local MSG1="[Post] Bringing up container's eth1 link..."
+  local MSG2="[Post] OK! Container's eth1 link is up"
+  local MSG3="[Post] Ops! Cannot bring up container's eth1 link"
+
+  echo $MSG1; $IPCMD netns exec $PID ip link set eth1 up && \
+  echo $MSG2 || (echo $MSG3; exit 9)
+
+  #----------------------------------------
+  # Setup the container's default gateway:
+  #----------------------------------------
+
+  local MSG1="[Post] Setting ${GATEWAY} as container's default gateway..."
+  local MSG2="[Post] OK! Container's default gateway is ${GATEWAY}"
+  local MSG3="[Post] Ops! Cannot set container's gateway to ${GATEWAY}"
+
+  echo $MSG1; $IPCMD netns exec $PID ip route replace default via $GATEWAY && \
+  echo $MSG2 || (echo $MSG3; exit 10)
+
+  #--------------------------------------
+  # Update the host's DNS configuration:
+  #--------------------------------------
+
+  local MSG1="[Post] Updating host's resolv.conf configuration..."
+  local MSG2="[Post] OK! Host's resolv.conf has been updated"
+  local MSG3="[Post] Ops! Cannot update host's resolv.conf"
+
+  echo $MSG1; echo "nameserver $IP" | resolvconf -m 0 -a $ID && \
+  echo $MSG2 || (echo $MSG3; exit 11)
 }
 
 #------------------------------------------------------------------------------
-# To be called by ExecStop:
+# Function to be called by ExecStop:
 #------------------------------------------------------------------------------
 
 function run_stop {
-  $DOCKER stop $ID || exit 1
-  $IPCMD link del veth-${ID} &> /dev/null || exit 2
-  return 0
+
+  #--------------------------------------
+  # Stop the container if it is running:
+  #--------------------------------------
+
+  local MSG1="[Stop] Checking whether '$ID' container is running..."
+  local MSG2="[Stop] The container '$ID' is running, stopping it..."
+  local MSG3="[Stop] OK! The container '$ID' has been stopped"
+  local MSG4="[Stop] Ops! Failed to stop the container '$ID'"
+  local MSG5="[Stop] OK! The container '$ID' is not running"
+
+  echo $MSG1; $DOCKER ps | grep -q $ID && {
+  echo $MSG2; $DOCKER stop $ID &> /dev/null && echo $MSG3 || {
+  echo $MSG4; exit 2
+  } } || echo $MSG5
+
+  #----------------------------------------------------
+  # Delete the host-side network interface if present:
+  #----------------------------------------------------
+
+  local MSG1="[Stop] Checking whether 'veth-${ID}' interface exists..."
+  local MSG2="[Stop] The interface 'veth-${ID}' exists, deleting it..."
+  local MSG3="[Stop] OK! The interface 'veth-${ID}' has been deleted"
+  local MSG4="[Stop] Ops! Failed to delete the interface 'veth-${ID}'"
+  local MSG5="[Stop] OK! The interface 'veth-${ID}' does not exists"
+
+  echo $MSG1; ip l show dev veth-${ID} &> /dev/null && {
+  echo $MSG2; $IPCMD link del veth-${ID} &> /dev/null && echo $MSG3 || {
+  echo $MSG4; exit 2
+  } } || echo $MSG5
 }
 
 #------------------------------------------------------------------------------
