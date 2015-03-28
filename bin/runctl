@@ -9,10 +9,21 @@ readonly IPCMD=`which ip`
 readonly BRCTL=`which brctl`
 
 #------------------------------------------------------------------------------
-# Source the configuration:
+# Source and verify the configuration:
 #------------------------------------------------------------------------------
 
 [ -f /etc/booddies/boot.conf ] && . /etc/booddies/boot.conf || exit 99
+
+[ -z "$ID" ] && echo 'Ops! ID is not set' && exit 99
+[ -z "$IMAGE" ] && echo 'Ops! IMAGE is not set' && exit 99
+[ -z "$HOSTNAME" ] && echo 'Ops! HOSTNAME is not set' && exit 99
+[ -z "$DATA_DIR" ] && echo 'Ops! DATA_DIR is not set' && exit 99
+[ -z "$DHCP_RANGE" ] && echo 'Ops! DHCP_RANGE is not set' && exit 99
+[ -z "$DHCP_OPTION" ] && echo 'Ops! DHCP_OPTION is not set' && exit 99
+[ -z "$DOMAIN" ] && echo 'Ops! DOMAIN is not set' && exit 99
+[ -z "$IP" ] && echo 'Ops! IP is not set' && exit 99
+[ -z "$PREFIX" ] && echo 'Ops! PREFIX is not set' && exit 99
+[ -z "$GATEWAY" ] && echo 'Ops! GATEWAY is not set' && exit 99
 
 #------------------------------------------------------------------------------
 # Function to be called by ExecStartPre:
@@ -24,9 +35,9 @@ function run_pre {
   # Create the data directories if not present:
   #---------------------------------------------
 
-  [ -d $DATA_DIR/dnsmasq ] || mkdir -p $DATA_DIR/dnsmasq
-  [ -d $DATA_DIR/pxelinux ] || mkdir -p $DATA_DIR/pxelinux
-  [ -d $DATA_DIR/images ] || mkdir -p $DATA_DIR/images
+  [ -d ${DATA_DIR}/dnsmasq ] || mkdir -p ${DATA_DIR}/dnsmasq
+  [ -d ${DATA_DIR}/pxelinux ] || mkdir -p ${DATA_DIR}/pxelinux
+  [ -d ${DATA_DIR}/images ] || mkdir -p ${DATA_DIR}/images
 
   #--------------------------------------
   # Kill the container if it is running:
@@ -108,19 +119,19 @@ function run_pre {
 function run_start {
   exec $DOCKER run -t \
   --privileged \
-  --volume   $DATA_DIR/dnsmasq:/var/lib/dnsmasq \
-  --volume   $DATA_DIR/pxelinux:/tftpboot/pxelinux.cfg \
-  --volume   $DATA_DIR/images:/tftpboot/images \
+  --volume   ${DATA_DIR}/dnsmasq:/var/lib/dnsmasq \
+  --volume   ${DATA_DIR}/pxelinux:/tftpboot/pxelinux.cfg \
+  --volume   ${DATA_DIR}/images:/tftpboot/images \
   --hostname $HOSTNAME \
   --name     $ID \
   --net      none \
   --env      WAIT_NETWORK=true \
   $IMAGE \
   --dhcp-hostsfile=/var/lib/dnsmasq/dhcp_hosts \
-  --dhcp-range=$DHCP_RANGE \
-  --dhcp-option=$DHCP_OPTION \
-  --local=/$DOMAIN/ \
-  --domain=$DOMAIN \
+  --dhcp-range=${DHCP_RANGE} \
+  --dhcp-option=${DHCP_OPTION} \
+  --local=/${DOMAIN}/ \
+  --domain=${DOMAIN} \
   --log-queries \
   --log-dhcp \
   --log-facility=-
@@ -157,7 +168,7 @@ function run_post {
 
   echo "[Post] Make sure the container's network namespace is accessible..."
   [ ! -d /var/run/netns ] && mkdir -p /var/run/netns
-  ln -fs /proc/$PID/ns/net /var/run/netns/$PID || exit 2
+  ln -fs /proc/${PID}/ns/net /var/run/netns/${PID} || exit 2
   echo "[Post] OK! It should be accessible now"
 
   #----------------------------------------------------
@@ -270,11 +281,11 @@ function run_stop {
   # Stop the container if it is running:
   #--------------------------------------
 
-  local MSG1="[Stop] Checking whether '$ID' container is running..."
-  local MSG2="[Stop] The container '$ID' is running, stopping it..."
-  local MSG3="[Stop] OK! The container '$ID' has been stopped"
-  local MSG4="[Stop] Ops! Failed to stop the container '$ID'"
-  local MSG5="[Stop] OK! The container '$ID' is not running"
+  local MSG1="[Stop] Checking whether '${ID}' container is running..."
+  local MSG2="[Stop] The container '${ID}' is running, stopping it..."
+  local MSG3="[Stop] OK! The container '${ID}' has been stopped"
+  local MSG4="[Stop] Ops! Failed to stop the container '${ID}'"
+  local MSG5="[Stop] OK! The container '${ID}' is not running"
 
   echo $MSG1; $DOCKER ps | grep -q $ID && {
   echo $MSG2; $DOCKER stop $ID &> /dev/null && echo $MSG3 || {
