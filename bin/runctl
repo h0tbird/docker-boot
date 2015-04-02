@@ -43,11 +43,11 @@ function run_pre {
   # Kill the container if it is running:
   #--------------------------------------
 
-  local MSG1="[Pre] Checking whether '$ID' container is running..."
-  local MSG2="[Pre] The container '$ID' is running, killing it..."
-  local MSG3="[Pre] OK! The container '$ID' has been killed"
-  local MSG4="[Pre] Ops! Failed to kill the container '$ID'"
-  local MSG5="[Pre] OK! The container '$ID' is not running"
+  local MSG1="[Pre] Checking whether '${ID}' container is running..."
+  local MSG2="[Pre] The container '${ID}' is running, killing it..."
+  local MSG3="[Pre] OK! The container '${ID}' has been killed"
+  local MSG4="[Pre] Ops! Failed to kill the container '${ID}'"
+  local MSG5="[Pre] OK! The container '${ID}' is not running"
 
   echo $MSG1; $DOCKER ps | grep -q $ID && {
   echo $MSG2; $DOCKER kill $ID &> /dev/null && echo $MSG3 || {
@@ -57,11 +57,11 @@ function run_pre {
   # Delete the container if it does exists:
   #-----------------------------------------
 
-  local MSG1="[Pre] Checking whether '$ID' container exists..."
-  local MSG2="[Pre] The container '$ID' exists, deleting it..."
-  local MSG3="[Pre] OK! The container '$ID' has been deleted"
-  local MSG4="[Pre] Ops! Failed to delete the container '$ID'"
-  local MSG5="[Pre] OK! The container '$ID' does not exists"
+  local MSG1="[Pre] Checking whether '${ID}' container exists..."
+  local MSG2="[Pre] The container '${ID}' exists, deleting it..."
+  local MSG3="[Pre] OK! The container '${ID}' has been deleted"
+  local MSG4="[Pre] Ops! Failed to delete the container '${ID}'"
+  local MSG5="[Pre] OK! The container '${ID}' does not exists"
 
   echo $MSG1; $DOCKER ps -a | grep -q $ID && {
   echo $MSG2; $DOCKER rm $ID &> /dev/null && echo $MSG3 || {
@@ -99,11 +99,11 @@ function run_pre {
   # Download the image if not present or is tagged as 'latest':
   #-------------------------------------------------------------
 
-  local MSG1="[Pre] Checking if '$IMAGE' has to be downloaded..."
-  local MSG2="[Pre] Yes, downloading the image '$IMAGE' now..."
-  local MSG3="[Pre] OK! The image '$IMAGE' is up to date"
-  local MSG4="[Pre] Ops! Failed to download the image '$IMAGE'"
-  local MSG5="[Pre] OK! The image '$IMAGE' already exists"
+  local MSG1="[Pre] Checking if '${IMAGE}' has to be downloaded..."
+  local MSG2="[Pre] Yes, downloading the image '${IMAGE}' now..."
+  local MSG3="[Pre] OK! The image '${IMAGE}' is up to date"
+  local MSG4="[Pre] Ops! Failed to download the image '${IMAGE}'"
+  local MSG5="[Pre] OK! The image '${IMAGE}' already exists"
 
   (! $DOCKER images | grep -q $IMAGE); COND1=$?
   $DOCKER images | grep $IMAGE | grep -q latest; COND2=$?
@@ -147,9 +147,9 @@ function run_post {
   # Wait for the container to become accessible:
   #----------------------------------------------
 
-  local MSG1="[Post] Waiting for the '$ID' container to become accessible..."
-  local MSG2="[Post] OK! The container '$ID' looks accessible now"
-  local MSG3="[Post] Ops! Time out. Where is the '$ID' container?"
+  local MSG1="[Post] Waiting for the '${ID}' container to become accessible..."
+  local MSG2="[Post] OK! The container '${ID}' looks accessible now"
+  local MSG3="[Post] Ops! Time out. Where is the '${ID}' container?"
 
   echo $MSG1; RETRIES=10; while [ $RETRIES -gt 0 ]; do
     PID=$($DOCKER inspect --format='{{ .State.Pid }}' \
