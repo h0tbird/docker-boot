@@ -1,0 +1,46 @@
+!#/bin/bash
+
+#------------------------------------------------------------------------------
+# Globals:
+#------------------------------------------------------------------------------
+
+# Settings:
+readonly VMLINUZ_URLS=(
+http://data01.demo.lan/centos/7/os/x86_64/images/pxeboot/vmlinuz
+http://mirrors.kernel.org/centos/7/os/x86_64/images/pxeboot/vmlinuz)
+readonly INITRD_URLS=(
+http://data01.demo.lan/centos/7/os/x86_64/images/pxeboot/initrd.img
+http://mirrors.kernel.org/centos/7/os/x86_64/images/pxeboot/initrd.img)
+readonly IMAGES='/tftpboot/images/centos/7/x86_64'
+
+# Return codes:
+readonly E_BAD_CMD=10
+
+# Commands:
+readonly CMD_CURL=$(type -P curl); [ -z "${CMD_CURL}" ] && exit ${E_BAD_CMD}
+
+#------------------------------------------------------------------------------
+#
+#------------------------------------------------------------------------------
+
+case $1 in
+
+  'vmlinuz')
+    [ -d "${IMAGES}" ] || mkdir -p "${IMAGES}"
+    for url in ${VMLINUZ_URLS}; do
+      ${CMD_CURL} -o ${IMAGES}/vmlinuz ${url} && break
+    done
+    ;;
+
+  'initrd')
+    [ -d "${IMAGES}" ] || mkdir -p "${IMAGES}"
+    for url in ${INITRD_URLS}; do
+      ${CMD_CURL} -o ${IMAGES}/initrd.img ${url} && break
+    done
+    ;;
+
+  *)
+    echo "Usage: ${0##*/} [vmlinuz|initrd]"
+    ;;
+
+esac
