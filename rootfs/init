@@ -4,18 +4,18 @@
 # Wait for the network:
 #------------------------------------------------------------------------------
 
-[ "$WAIT_NETWORK" ] && {
+[ "${WAIT_NETWORK}" ] && {
 
-  RETRIES=20
+  local RETRIES=20
 
   echo '[Init] Waiting for the network...'
 
-  while [ $RETRIES -gt 0 ]; do
+  while [ ${RETRIES} -gt 0 ]; do
     ip r 2> /dev/null | grep -q default && break
     sleep 1; RETRIES=$((RETRIES - 1))
   done
 
-  [ $RETRIES -eq 0 ] && {
+  [ ${RETRIES} -eq 0 ] && {
     echo '[Init] There is no network'
     exit 1
   }
@@ -29,8 +29,17 @@
 
 echo '[Init] Configuring the service...'
 
-IP=`ip -o a | awk -F"[ /]" '/eth1/ {print $7}'`
-echo "$IP $HOSTNAME" > /etc/hosts.conf
+# Setup /etc/hosts.conf
+readonly IP=`ip -o a | awk -F"[ /]" '/eth1/ {print $7}'`
+echo "${IP} ${HOSTNAME}" > /etc/hosts.conf
+
+# Setup /etc/resolv.conf
+echo "nameserver 127.0.0.1" > /etc/resolv.conf
+[ "${DNS_UPSTREAMS}" ] && {
+  for UPSTREAM in ${DNS_UPSTREAMS}; do
+    echo "nameserver ${UPSTREAM}" >> /etc/resolv.conf
+  done
+}
 
 #------------------------------------------------------------------------------
 # Run:

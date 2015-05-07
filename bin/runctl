@@ -30,6 +30,7 @@ source /etc/booddies/boot.conf || exit ${E_BAD_CONF}
 [ -z "${IP}" ] && echo 'Ops! IP is not set' && exit ${E_BAD_CONF}
 [ -z "${PREFIX}" ] && echo 'Ops! PREFIX is not set' && exit ${E_BAD_CONF}
 [ -z "${GATEWAY}" ] && echo 'Ops! GATEWAY is not set' && exit ${E_BAD_CONF}
+[ -z "${DNS_UPSTREAMS}" ] && echo 'Ops! DNS_UPSTREAMS is not set' && exit ${E_BAD_CONF}
 
 #------------------------------------------------------------------------------
 # Function to be called by ExecStartPre:
@@ -109,6 +110,7 @@ function run_start() {
   --name     ${ID} \
   --net      none \
   --env      WAIT_NETWORK=true \
+  --env      DNS_UPSTREAMS=${DNS_UPSTREAMS} \
   ${IMAGE} \
   --dhcp-hostsfile=/var/lib/dnsmasq/dhcp_hosts \
   --dhcp-range=${DHCP_RANGE} \
