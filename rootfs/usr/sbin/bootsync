@@ -6,10 +6,10 @@
 
 # Settings:
 readonly VMLINUZ_URLS=(
-http://data01.demo.lan/centos/7/os/x86_64/images/pxeboot/vmlinuz
+http://data01/centos/7/os/x86_64/images/pxeboot/vmlinuz
 http://mirrors.kernel.org/centos/7/os/x86_64/images/pxeboot/vmlinuz)
 readonly INITRD_URLS=(
-http://data01.demo.lan/centos/7/os/x86_64/images/pxeboot/initrd.img
+http://data01/centos/7/os/x86_64/images/pxeboot/initrd.img
 http://mirrors.kernel.org/centos/7/os/x86_64/images/pxeboot/initrd.img)
 readonly IMAGES='/tftpboot/images/centos/7/x86_64'
 

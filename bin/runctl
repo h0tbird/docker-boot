@@ -110,7 +110,7 @@ function run_start() {
   --name     ${ID} \
   --net      none \
   --env      WAIT_NETWORK=true \
-  --env      DNS_UPSTREAMS=${DNS_UPSTREAMS} \
+  --env      DNS_UPSTREAMS="${DNS_UPSTREAMS}" \
   ${IMAGE} \
   --dhcp-hostsfile=/var/lib/dnsmasq/dhcp_hosts \
   --dhcp-range=${DHCP_RANGE} \
