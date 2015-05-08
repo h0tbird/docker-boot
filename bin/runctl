@@ -4,6 +4,9 @@
 # Globals:
 #------------------------------------------------------------------------------
 
+# Settings:
+readonly OUI='00:16:3e'
+
 # Return codes:
 readonly E_BAD_CMD=10
 readonly E_BAD_CONF=11
