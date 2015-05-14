@@ -6,7 +6,7 @@
 
 [ "${WAIT_NETWORK}" ] && {
 
-  local RETRIES=20
+  RETRIES=20
 
   echo '[Init] Waiting for the network...'
 
