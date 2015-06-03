@@ -17,7 +17,6 @@ readonly CMD_IP=$(type -P ip); [ -z "${CMD_IP}" ] && exit ${E_BAD_CMD}
 readonly CMD_BRCTL=$(type -P brctl); [ -z "${CMD_BRCTL}" ] && exit ${E_BAD_CMD}
 readonly CMD_MD5SUM=$(type -P md5sum); [ -z "${CMD_MD5SUM}" ] && exit ${E_BAD_CMD}
 readonly CMD_HEXDUMP=$(type -P hexdump); [ -z "${CMD_HEXDUMP}" ] && exit ${E_BAD_CMD}
-readonly CMD_DHCPCD=$(type -P dhcpcd); [ -z "${CMD_DHCPCD}" ] && exit ${E_BAD_CMD}
 readonly CMD_RESOLVCONF=$(type -P resolvconf); [ -z "${CMD_RESOLVCONF}" ] && exit ${E_BAD_CMD}
 
 #------------------------------------------------------------------------------
