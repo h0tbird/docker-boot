@@ -33,9 +33,10 @@ source /etc/booddies/boot.conf || exit ${E_BAD_CONF}
 [ -z "${DHCP_OPTION}" ] && echo 'Ops! DHCP_OPTION is not set' && exit ${E_BAD_CONF}
 [ -z "${DOMAIN}" ] && echo 'Ops! DOMAIN is not set' && exit ${E_BAD_CONF}
 [ -z "${IP}" ] && echo 'Ops! IP is not set' && exit ${E_BAD_CONF}
-[ -z "${PREFIX}" ] && echo 'Ops! PREFIX is not set' && exit ${E_BAD_CONF}
+[ -z "${IP_PREFIX}" ] && echo 'Ops! IP_PREFIX is not set' && exit ${E_BAD_CONF}
 [ -z "${GATEWAY}" ] && echo 'Ops! GATEWAY is not set' && exit ${E_BAD_CONF}
 [ -z "${DNS_UPSTREAMS}" ] && echo 'Ops! DNS_UPSTREAMS is not set' && exit ${E_BAD_CONF}
+[ -z "${HOST_BRIDGE}" ] && echo 'Ops! HOST_BRIDGE is not set' && exit ${E_BAD_CONF}
 
 #------------------------------------------------------------------------------
 # Functions:
@@ -88,13 +89,13 @@ function run_pre() {
   echo ${MSG4}; exit 4; } } || echo ${MSG5}
 
   # Create the host's bridge interface if not present:
-  local MSG1="[Pre] Checking whether 'br0' interface exists..."
-  local MSG2="[Pre] The interface 'br0' is not present, creating it..."
-  local MSG3="[Pre] OK! The interface 'br0' has been created"
-  local MSG4="[Pre] Ops! Failed to create interface 'br0'"
-  local MSG5="[Pre] OK! The interface 'br0' exists"
-  echo ${MSG1}; ! ${CMD_IP} l show dev br0 &> /dev/null && {
-  echo ${MSG2}; ${CMD_BRCTL} addbr br0 && echo ${MSG3} || {
+  local MSG1="[Pre] Checking whether '${HOST_BRIDGE}' interface exists..."
+  local MSG2="[Pre] The interface '${HOST_BRIDGE}' is not present, creating it..."
+  local MSG3="[Pre] OK! The interface '${HOST_BRIDGE}' has been created"
+  local MSG4="[Pre] Ops! Failed to create interface '${HOST_BRIDGE}'"
+  local MSG5="[Pre] OK! The interface '${HOST_BRIDGE}' exists"
+  echo ${MSG1}; ! ${CMD_IP} l show dev ${HOST_BRIDGE} &> /dev/null && {
+  echo ${MSG2}; ${CMD_BRCTL} addbr ${HOST_BRIDGE} && echo ${MSG3} || {
   echo ${MSG4}; exit 5; } } || echo ${MSG5}
 
   # Download the image if not present or is tagged as 'latest':
@@ -171,10 +172,10 @@ function run_post() {
   type veth peer name veth-${ID} && echo ${MSG2} || { echo ${MSG3}; exit 3; }
 
   # Connect the host peer interface to the host's bridge:
-  local MSG1="[Post] Connecting 'veth-${ID}' interface to 'br0'"
-  local MSG2="[Post] OK! Interface 'veth-${ID}' is now connected to 'br0'"
-  local MSG3="[Post] Ops! Cannot connect 'veth-${ID}' interface to 'br0'"
-  echo ${MSG1}; ${CMD_IP} link set veth-${ID} master br0 && \
+  local MSG1="[Post] Connecting 'veth-${ID}' interface to '${HOST_BRIDGE}'"
+  local MSG2="[Post] OK! Interface 'veth-${ID}' is now connected to '${HOST_BRIDGE}'"
+  local MSG3="[Post] Ops! Cannot connect 'veth-${ID}' interface to '${HOST_BRIDGE}'"
+  echo ${MSG1}; ${CMD_IP} link set veth-${ID} master ${HOST_BRIDGE} && \
   echo ${MSG2} || { echo ${MSG3}; exit 4; }
 
   # Bring up the host's peer interface link:
@@ -199,10 +200,10 @@ function run_post() {
   echo ${MSG2} || { echo ${MSG3}; exit 7; }
 
   # Add a static IP to the container's eth1 interface:
-  local MSG1="[Post] Adding ${IP}/${PREFIX} to container's eth1..."
-  local MSG2="[Post] OK! The current IP is ${IP}/${PREFIX}"
-  local MSG3="[Post] Ops! Cannot set IP to ${IP}/${PREFIX}"
-  echo ${MSG1}; ${CMD_IP} netns exec ${PID} ${CMD_IP} addr add ${IP}/${PREFIX} dev eth1 && \
+  local MSG1="[Post] Adding ${IP}/${IP_PREFIX} to container's eth1..."
+  local MSG2="[Post] OK! The current IP is ${IP}/${IP_PREFIX}"
+  local MSG3="[Post] Ops! Cannot set IP to ${IP}/${IP_PREFIX}"
+  echo ${MSG1}; ${CMD_IP} netns exec ${PID} ${CMD_IP} addr add ${IP}/${IP_PREFIX} dev eth1 && \
   echo ${MSG2} || { echo ${MSG3}; exit 8; }
 
   # Bring up container's eth1 interface link:
