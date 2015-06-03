@@ -17,7 +17,6 @@ readonly CMD_IP=$(type -P ip); [ -z "${CMD_IP}" ] && exit ${E_BAD_CMD}
 readonly CMD_BRCTL=$(type -P brctl); [ -z "${CMD_BRCTL}" ] && exit ${E_BAD_CMD}
 readonly CMD_MD5SUM=$(type -P md5sum); [ -z "${CMD_MD5SUM}" ] && exit ${E_BAD_CMD}
 readonly CMD_HEXDUMP=$(type -P hexdump); [ -z "${CMD_HEXDUMP}" ] && exit ${E_BAD_CMD}
-readonly CMD_RESOLVCONF=$(type -P resolvconf); [ -z "${CMD_RESOLVCONF}" ] && exit ${E_BAD_CMD}
 
 #------------------------------------------------------------------------------
 # Source and verify the configuration:
@@ -224,7 +223,8 @@ function run_post() {
   local MSG1="[Post] Updating host's resolv.conf configuration..."
   local MSG2="[Post] OK! Host's resolv.conf has been updated"
   local MSG3="[Post] Ops! Cannot update host's resolv.conf"
-  echo ${MSG1}; echo "nameserver ${IP}" | ${CMD_RESOLVCONF} -m 0 -a ${ID} && \
+  echo ${MSG1}; echo "search ${DOMAIN}" > /etc/resolv.conf && \
+  echo "nameserver ${IP}" >> /etc/resolv.conf && \
   echo ${MSG2} || { echo ${MSG3}; exit 11; }
 }
 
