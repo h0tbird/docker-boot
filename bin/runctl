@@ -58,6 +58,14 @@ function run_pre() {
   [ -d ${DATA_DIR}/pxelinux ] || mkdir -p ${DATA_DIR}/pxelinux
   [ -d ${DATA_DIR}/images ] || mkdir -p ${DATA_DIR}/images
 
+  # Update the host's DNS configuration:
+  local MSG1="[Pre] Updating host's resolv.conf configuration..."
+  local MSG2="[Pre] OK! Host's resolv.conf has been updated"
+  local MSG3="[Pre] Ops! Cannot update host's resolv.conf"
+  echo ${MSG1}; echo > /etc/resolv.conf && \
+  for i in ${DNS_UPSTREAMS}; do echo "nameserver ${i}" >> /etc/resolv.conf; done && \
+  echo ${MSG2} || { echo ${MSG3}; exit 12; }
+
   # Kill the container if it is running:
   local MSG1="[Pre] Checking whether '${ID}' container is running..."
   local MSG2="[Pre] The container '${ID}' is running, killing it..."
