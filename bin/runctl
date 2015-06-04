@@ -235,6 +235,14 @@ function run_post() {
 
 function run_stop() {
 
+  # Update the host's DNS configuration:
+  local MSG1="[Stop] Updating host's resolv.conf configuration..."
+  local MSG2="[Stop] OK! Host's resolv.conf has been updated"
+  local MSG3="[Stop] Ops! Cannot update host's resolv.conf"
+  echo ${MSG1}; sed -i "/${IP}/d" /etc/resolv.conf && \
+  for i in ${DNS_UPSTREAMS}; do echo "nameserver ${i}" >> /etc/resolv.conf; done && \
+  echo ${MSG2} || { echo ${MSG3}; exit 12; }
+
   # Stop the container if it is running:
   local MSG1="[Stop] Checking whether '${ID}' container is running..."
   local MSG2="[Stop] The container '${ID}' is running, stopping it..."
@@ -243,7 +251,7 @@ function run_stop() {
   local MSG5="[Stop] OK! The container '${ID}' is not running"
   echo ${MSG1}; ${CMD_DOCKER} ps | grep -q ${ID} && {
   echo ${MSG2}; ${CMD_DOCKER} stop ${ID} &> /dev/null && echo ${MSG3} || {
-  echo ${MSG4}; exit 2; } } || echo ${MSG5}
+  echo ${MSG4}; exit 13; } } || echo ${MSG5}
 
   # Delete the host-side network interface if present:
   local MSG1="[Stop] Checking whether 'veth-${ID}' interface exists..."
@@ -253,7 +261,7 @@ function run_stop() {
   local MSG5="[Stop] OK! The interface 'veth-${ID}' does not exists"
   echo ${MSG1}; ${CMD_IP} l show dev veth-${ID} &> /dev/null && {
   echo ${MSG2}; ${CMD_IP} link del veth-${ID} &> /dev/null && echo ${MSG3} || {
-  echo ${MSG4}; exit 2; } } || echo ${MSG5}
+  echo ${MSG4}; exit 14; } } || echo ${MSG5}
 }
 
 #------------------------------------------------------------------------------
