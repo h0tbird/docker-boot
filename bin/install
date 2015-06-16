@@ -14,7 +14,7 @@ E_BAD_CP=1
 # Source miscellaneous bash functions:
 #------------------------------------------------------------------------------
 
-source ../../bin/misclib.sh
+source ../../bin/booddies.sh
 
 #------------------------------------------------------------------------------
 # Install /etc/systemd/system/boot.service
