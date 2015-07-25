@@ -30,7 +30,7 @@
 echo '[Init] Configuring the service...'
 
 # Setup /etc/hosts.conf
-readonly IP=`ip -o a | awk -F"[ /]" '/eth1/ {print $7}'`
+readonly IP=$(ip -o a | awk -F"[ /]" '/eth/ {print $7}')
 echo "${IP} ${HOSTNAME}" > /etc/hosts.conf
 
 # Setup /etc/resolv.conf
