@@ -6,28 +6,47 @@
 # Globals:
 #------------------------------------------------------------------------------
 
-E_BAD_LN=1
-E_BAD_MKDIR=1
-E_BAD_CP=1
+readonly E_BAD_CONF=10
+readonly E_BAD_LN=11
+readonly E_BAD_MKDIR=12
+readonly E_BAD_CP=13
+
+#------------------------------------------------------------------------------
+# Source and verify the configuration:
+#------------------------------------------------------------------------------
+
+[ -f boot.conf ] && \
+  source boot.conf || exit ${E_BAD_CONF}
+
+[ -z "${DATA_DIR}" ] && echo 'Ops! DATA_DIR is not set' && exit ${E_BAD_CONF}
+[ -z "${LOG_FILE}" ] && echo 'Ops! LOG_FILE is not set' && exit ${E_BAD_CONF}
 
 #------------------------------------------------------------------------------
 # Source miscellaneous bash functions:
 #------------------------------------------------------------------------------
 
-source ../../bin/booddies.sh
+[ -f ../../bin/booddies.sh ] && \
+  source ../../bin/booddies.sh || exit ${E_BAD_CONF}
+
+#------------------------------------------------------------------------------
+# Create data and logs directories:
+#------------------------------------------------------------------------------
+
+[ -d "${DATA_DIR}" ] || mkdir -p ${DATA_DIR}
+[ -d "$(dirname ${LOG_FILE})" ] || mkdir -p $(dirname ${LOG_FILE})
 
 #------------------------------------------------------------------------------
 # Install /etc/systemd/system/boot.service
 #------------------------------------------------------------------------------
 
-target='boot.service'
-link_name='/etc/systemd/system/boot.service'
-msg="Install ${link_name}"
+TARGET='boot.service'
+LINK_NAME='/etc/systemd/system/boot.service'
+MSG="Install ${LINK_NAME}"
 
-misc::stat_busy "${msg}"
+misc::stat_busy "${MSG}"
 
-if ! ln -f "${target}" "${link_name}"; then
-  misc::log "[ERROR] ${msg}"
+if ! ln -f "${TARGET}" "${LINK_NAME}"; then
+  misc::log "[ERROR] ${MSG}"
   misc::stat_fail
   exit "${E_BAD_LN}"
 else
@@ -38,14 +57,14 @@ fi
 # Install /usr/local/sbin/runctl-boot
 #------------------------------------------------------------------------------
 
-target='bin/runctl'
-link_name='/usr/local/sbin/runctl-boot'
-msg="Install ${link_name}"
+TARGET='bin/runctl'
+LINK_NAME='/usr/local/sbin/runctl-boot'
+MSG="Install ${LINK_NAME}"
 
-misc::stat_busy "${msg}"
+misc::stat_busy "${MSG}"
 
-if ! ln -f "${target}" "${link_name}"; then
-  misc::log "[ERROR] ${msg}"
+if ! ln -f "${TARGET}" "${LINK_NAME}"; then
+  misc::log "[ERROR] ${MSG}"
   misc::stat_fail
   exit "${E_BAD_LN}"
 else
@@ -56,14 +75,14 @@ fi
 # Install /etc/booddies/boot.conf
 #------------------------------------------------------------------------------
 
-msg1='Create /etc/booddies directory'
-msg2='Install /etc/booddies/boot.conf'
+MSG1='Create /etc/booddies directory'
+MSG2='Install /etc/booddies/boot.conf'
 
-misc::stat_busy "${msg2}"
+misc::stat_busy "${MSG2}"
 
 if [[ ! -d /etc/booddies ]]; then
   if ! mkdir /etc/booddies; then
-    misc::log "[ERROR] ${msg1}"
+    misc::log "[ERROR] ${MSG1}"
     misc::stat_fail
     exit "${E_BAD_MKDIR}"
   fi
@@ -71,7 +90,7 @@ fi
 
 if [[ ! -f /etc/booddies/boot.conf ]]; then
   if ! cp boot.conf /etc/booddies/; then
-    misc::log "[ERROR] ${msg2}"
+    misc::log "[ERROR] ${MSG2}"
     misc::stat_fail
     exit "${E_BAD_CP}"
   fi
