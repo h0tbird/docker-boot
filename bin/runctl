@@ -4,9 +4,6 @@
 # Globals:
 #------------------------------------------------------------------------------
 
-# Settings:
-readonly OUI='00:16:3e'
-
 # Return codes:
 readonly E_BAD_CMD=10
 readonly E_BAD_CONF=11
@@ -38,6 +35,7 @@ source /etc/booddies/boot.conf || exit ${E_BAD_CONF}
 [ -z "${DNS_UPSTREAMS}" ] && echo 'Ops! DNS_UPSTREAMS is not set' && exit ${E_BAD_CONF}
 [ -z "${HOST_BRIDGE}" ] && echo 'Ops! HOST_BRIDGE is not set' && exit ${E_BAD_CONF}
 [ -z "${IFACE}" ] && echo 'Ops! IFACE is not set' && exit ${E_BAD_CONF}
+[ -z "${OUI}" ] && echo 'Ops! OUI is not set' && exit ${E_BAD_CONF}
 
 #------------------------------------------------------------------------------
 # Functions:
