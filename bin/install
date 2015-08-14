@@ -33,7 +33,10 @@ readonly E_BAD_CP=13
 #------------------------------------------------------------------------------
 
 [ -d "${DATA_DIR}" ] || mkdir -p ${DATA_DIR}
-[ -d "$(dirname ${LOG_FILE})" ] || mkdir -p $(dirname ${LOG_FILE})
+[ -d "$(dirname ${LOG_FILE})" ] || {
+  mkdir -p $(dirname ${LOG_FILE})
+  chmod -R o+rw $(dirname ${LOG_FILE})
+}
 
 #------------------------------------------------------------------------------
 # Install /etc/systemd/system/boot.service
