@@ -1,14 +1,12 @@
 language: bash
 services: docker
 
-install:
- - git clone https://github.com/h0tbird/docker-boot.git ~/docker-boot
-
 before_script:
  - cd ~/docker-boot
 
 script:
  - ./bin/build
+ - ./bin/install
 
 after_script:
  - docker images
