@@ -3,7 +3,6 @@ services: docker
 
 script:
  - ./bin/build
- - ./bin/install
 
 after_script:
  - docker images
