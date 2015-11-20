@@ -1,5 +1,8 @@
 # docker-boot
 
+[![Build Status](https://travis-ci.org/h0tbird/docker-boot.svg?branch=master)](https://travis-ci.org/h0tbird/docker-boot)
+[![](https://badge.imagelayers.io/h0tbird/boot:latest.svg)](https://imagelayers.io/?images=h0tbird/boot:latest 'Get your own badge on imagelayers.io')
+
 This container is member of the [*booddies*](https://github.com/h0tbird/booddies) fellowship.
 
 Clone and build:
