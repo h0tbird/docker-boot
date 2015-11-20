@@ -1,9 +1,6 @@
 language: bash
 services: docker
 
-before_script:
- - cd h0tbird/docker-boot
-
 script:
  - ./bin/build
  - ./bin/install
